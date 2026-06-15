@@ -9,7 +9,7 @@ A modern productivity and task management platform built with the MERN stack.
 | Frontend | React (Vite), Tailwind CSS, Lucide React, Axios, React Router |
 | Backend  | Node.js, Express.js                 |
 | Database | MongoDB, Mongoose                   |
-| Auth     | JWT, bcrypt (Phase 2+)              |
+| Auth     | JWT, bcryptjs (Phase 2+)          |
 
 ## Project Structure
 
@@ -71,6 +71,16 @@ Expected response:
   "timestamp": "..."
 }
 ```
+
+## Auth API (Phase 2)
+
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| POST | `/api/auth/register` | No | Register a new user |
+| POST | `/api/auth/login` | No | Login and receive JWT |
+| GET | `/api/auth/me` | Yes | Get current user profile |
+
+**Note:** MongoDB must be running for auth endpoints to work.
 
 ## Environment Variables
 

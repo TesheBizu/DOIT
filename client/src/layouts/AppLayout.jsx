@@ -1,11 +1,19 @@
 import { useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
-import { CheckSquare, Menu, X } from 'lucide-react';
+import { CheckSquare, LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import Button from '../components/Button';
 
 function AppLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { isAuthenticated, user, logout } = useAuth();
 
   const closeMenu = () => setMenuOpen(false);
+
+  const handleLogout = () => {
+    logout();
+    closeMenu();
+  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -27,25 +35,44 @@ function AppLayout() {
             <span className="text-xl tracking-tight text-slate-900">DOIT</span>
           </Link>
 
-          <nav className="hidden items-center gap-6 md:flex" aria-label="Main navigation">
-            <Link
-              to="/"
-              className="text-sm font-medium text-slate-600 transition-colors hover:text-brand-600"
-            >
-              Home
-            </Link>
-            <Link
-              to="/login"
-              className="text-sm font-medium text-slate-600 transition-colors hover:text-brand-600"
-            >
-              Sign in
-            </Link>
-            <Link
-              to="/register"
-              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-700"
-            >
-              Get started
-            </Link>
+          <nav className="hidden items-center gap-4 md:flex" aria-label="Main navigation">
+            {isAuthenticated ? (
+              <>
+                <Link
+                  to="/dashboard"
+                  className="flex items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-brand-600"
+                >
+                  <LayoutDashboard size={18} aria-hidden="true" />
+                  Dashboard
+                </Link>
+                <span className="text-sm text-slate-500">{user?.name}</span>
+                <Button variant="ghost" onClick={handleLogout} className="gap-1.5 px-3 py-2">
+                  <LogOut size={18} aria-hidden="true" />
+                  Sign out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/"
+                  className="text-sm font-medium text-slate-600 transition-colors hover:text-brand-600"
+                >
+                  Home
+                </Link>
+                <Link
+                  to="/login"
+                  className="text-sm font-medium text-slate-600 transition-colors hover:text-brand-600"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  to="/register"
+                  className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-700"
+                >
+                  Get started
+                </Link>
+              </>
+            )}
           </nav>
 
           <button
@@ -67,33 +94,61 @@ function AppLayout() {
             aria-label="Mobile navigation"
           >
             <ul className="flex flex-col gap-3">
-              <li>
-                <Link
-                  to="/"
-                  className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                  onClick={closeMenu}
-                >
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/login"
-                  className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                  onClick={closeMenu}
-                >
-                  Sign in
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/register"
-                  className="block rounded-lg bg-brand-600 px-3 py-2 text-center text-sm font-medium text-white hover:bg-brand-700"
-                  onClick={closeMenu}
-                >
-                  Get started
-                </Link>
-              </li>
+              {isAuthenticated ? (
+                <>
+                  <li className="px-3 text-sm text-slate-500">{user?.name}</li>
+                  <li>
+                    <Link
+                      to="/dashboard"
+                      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                      onClick={closeMenu}
+                    >
+                      <LayoutDashboard size={18} aria-hidden="true" />
+                      Dashboard
+                    </Link>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    >
+                      <LogOut size={18} aria-hidden="true" />
+                      Sign out
+                    </button>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li>
+                    <Link
+                      to="/"
+                      className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                      onClick={closeMenu}
+                    >
+                      Home
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/login"
+                      className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                      onClick={closeMenu}
+                    >
+                      Sign in
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/register"
+                      className="block rounded-lg bg-brand-600 px-3 py-2 text-center text-sm font-medium text-white hover:bg-brand-700"
+                      onClick={closeMenu}
+                    >
+                      Get started
+                    </Link>
+                  </li>
+                </>
+              )}
             </ul>
           </nav>
         )}
