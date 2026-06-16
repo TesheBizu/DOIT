@@ -82,6 +82,16 @@ Expected response:
 
 **Note:** MongoDB must be running for auth endpoints to work.
 
+## Projects API (Phase 3)
+
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| GET | `/api/projects` | Yes | List user's projects |
+| POST | `/api/projects` | Yes | Create a project |
+| GET | `/api/projects/:id` | Yes | Get a single project |
+| PUT | `/api/projects/:id` | Yes | Update a project |
+| DELETE | `/api/projects/:id` | Yes | Delete a project |
+
 ## Environment Variables
 
 ### Server (`server/.env`)
