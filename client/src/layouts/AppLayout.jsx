@@ -1,19 +1,73 @@
 import { useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
-import { CheckSquare, LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
+import { CheckSquare, LayoutDashboard, LogOut, Menu, User, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/Button';
+import Modal from '../components/Modal';
+import Input from '../components/Input';
+import FormError from '../components/FormError';
 
 function AppLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { isAuthenticated, user, logout } = useAuth();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [profileForm, setProfileForm] = useState({ name: '', password: '' });
+  const [profileError, setProfileError] = useState('');
+  const [profileLoading, setProfileLoading] = useState(false);
+  const { isAuthenticated, user, logout, updateProfile } = useAuth();
 
   const closeMenu = () => setMenuOpen(false);
 
   const handleLogout = () => {
     logout();
     closeMenu();
+    setProfileMenuOpen(false);
   };
+
+  const openProfileModal = () => {
+    setProfileForm({ name: user?.name || '', password: '' });
+    setProfileError('');
+    setProfileOpen(true);
+    setProfileMenuOpen(false);
+  };
+
+  const handleProfileChange = (e) => {
+    const { name, value } = e.target;
+    setProfileForm((prev) => ({ ...prev, [name]: value }));
+    setProfileError('');
+  };
+
+  const handleProfileSubmit = async (e) => {
+    e.preventDefault();
+    setProfileError('');
+
+    if (!profileForm.name.trim()) {
+      setProfileError('Name is required');
+      return;
+    }
+
+    setProfileLoading(true);
+    try {
+      const payload = { name: profileForm.name.trim() };
+      if (profileForm.password) {
+        if (profileForm.password.length < 6) {
+          setProfileError('Password must be at least 6 characters');
+          setProfileLoading(false);
+          return;
+        }
+        payload.password = profileForm.password;
+      }
+      await updateProfile(payload);
+      setProfileOpen(false);
+      setProfileForm({ name: '', password: '' });
+    } catch (err) {
+      setProfileError(err.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const profileInitial = user?.name?.trim()?.[0]?.toUpperCase() || 'U';
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -45,11 +99,40 @@ function AppLayout() {
                   <LayoutDashboard size={18} aria-hidden="true" />
                   Dashboard
                 </Link>
-                <span className="text-sm text-slate-500">{user?.name}</span>
-                <Button variant="ghost" onClick={handleLogout} className="gap-1.5 px-3 py-2">
-                  <LogOut size={18} aria-hidden="true" />
-                  Sign out
-                </Button>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setProfileMenuOpen((open) => !open)}
+                    className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-1 text-sm text-slate-700 shadow-sm hover:border-brand-300"
+                    aria-label="Account menu"
+                    aria-expanded={profileMenuOpen}
+                  >
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 text-xs font-semibold text-white">
+                      {profileInitial}
+                    </div>
+                    <span className="max-w-[7rem] truncate">{user?.name}</span>
+                  </button>
+                  {profileMenuOpen && (
+                    <div className="absolute right-0 z-20 mt-2 w-44 rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+                      <button
+                        type="button"
+                        onClick={openProfileModal}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                      >
+                        <User size={16} aria-hidden="true" />
+                        Profile
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                      >
+                        <LogOut size={16} aria-hidden="true" />
+                        Sign out
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
               <>
@@ -163,6 +246,55 @@ function AppLayout() {
           &copy; {new Date().getFullYear()} DOIT. Built for productivity.
         </div>
       </footer>
+
+      <Modal
+        isOpen={profileOpen}
+        onClose={() => {
+          setProfileOpen(false);
+          setProfileForm({ name: '', password: '' });
+          setProfileError('');
+        }}
+        title="Profile"
+      >
+        <form onSubmit={handleProfileSubmit} className="space-y-4" noValidate>
+          {profileError && <FormError message={profileError} />}
+          <Input
+            id="profile-name"
+            name="name"
+            label="Name"
+            value={profileForm.name}
+            onChange={handleProfileChange}
+            autoComplete="name"
+          />
+          <Input
+            id="profile-password"
+            name="password"
+            type="password"
+            label="New password"
+            placeholder="Leave blank to keep current password"
+            value={profileForm.password}
+            onChange={handleProfileChange}
+            autoComplete="new-password"
+          />
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={() => {
+                setProfileOpen(false);
+                setProfileForm({ name: '', password: '' });
+                setProfileError('');
+              }}
+              disabled={profileLoading}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={profileLoading}>
+              {profileLoading ? 'Saving...' : 'Save changes'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

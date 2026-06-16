@@ -3,8 +3,11 @@ import AppLayout from './layouts/AppLayout';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import ProjectDetail from './pages/ProjectDetail';
+import NotFound from './pages/NotFound';
 import { PrivateRoute, GuestRoute } from './routes/PrivateRoute';
 
 function App() {
@@ -30,6 +33,22 @@ function App() {
             }
           />
           <Route
+            path="/forgot-password"
+            element={
+              <GuestRoute>
+                <ForgotPassword />
+              </GuestRoute>
+            }
+          />
+          <Route
+            path="/reset-password"
+            element={
+              <GuestRoute>
+                <ResetPassword />
+              </GuestRoute>
+            }
+          />
+          <Route
             path="/dashboard"
             element={
               <PrivateRoute>
@@ -45,6 +64,7 @@ function App() {
               </PrivateRoute>
             }
           />
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
     </BrowserRouter>

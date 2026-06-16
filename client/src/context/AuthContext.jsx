@@ -51,6 +51,13 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const updateProfile = async (formData) => {
+    const { data } = await authApi.updateProfile(formData);
+    setAuth(data.data.token, data.data.user);
+    setUser(data.data.user);
+    return data.data.user;
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -60,6 +67,7 @@ export function AuthProvider({ children }) {
         register,
         login,
         logout,
+        updateProfile,
       }}
     >
       {children}

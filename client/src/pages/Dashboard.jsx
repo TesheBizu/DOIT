@@ -171,9 +171,7 @@ function Dashboard() {
   };
 
   return (
-    <div className="relative mx-auto max-w-6xl overflow-hidden px-4 py-8 sm:px-6 sm:py-12">
-      <span className="bg-float-orb left-[-3rem] top-10 h-32 w-32 bg-brand-300" />
-      <span className="bg-float-orb bg-float-orb-reverse right-[-4rem] top-24 h-36 w-36 bg-emerald-300" />
+    <div className="ambient-shell mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="mb-2 inline-flex rounded-lg bg-brand-50 p-2 text-brand-600">
@@ -293,8 +291,14 @@ function Dashboard() {
       )}
 
       {loading ? (
-        <div className="flex min-h-[30vh] items-center justify-center">
-          <Spinner size={32} className="text-brand-600" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Loading projects">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={`project-skeleton-${i}`}
+              className="h-40 animate-pulse rounded-xl border border-slate-200 bg-slate-100"
+              aria-hidden="true"
+            />
+          ))}
           <span className="sr-only">Loading projects...</span>
         </div>
       ) : projects.length === 0 ? (

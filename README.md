@@ -56,6 +56,28 @@ npm run dev
 
 Client runs at `http://localhost:5173`
 
+## Forgot Password (Email Reset)
+
+DOIT supports password reset via email.
+
+### Configure SMTP (server)
+
+In `server/.env`, set:
+
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_SECURE` (`true` for port 465, otherwise `false`)
+- `SMTP_USER`
+- `SMTP_PASS`
+- `EMAIL_FROM` (optional; defaults to `SMTP_USER`)
+- `CLIENT_URL` (used to generate the reset link)
+
+### Flow
+
+- Go to `/forgot-password` and submit your email.
+- You will receive an email with a link to `/reset-password?token=...`.
+- Set a new password and sign in again.
+
 ## API Health Check
 
 ```bash
@@ -102,6 +124,21 @@ Expected response:
 | PATCH | `/api/tasks/:id/status` | Yes | Quick status update |
 | DELETE | `/api/tasks/:id` | Yes | Delete task |
 
+## Dashboard API (Phase 5)
+
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| GET | `/api/dashboard` | Yes | Aggregated productivity stats + recent tasks |
+| GET | `/api/tasks/search?q=` | Yes | Search tasks across all user projects |
+
+## Production Hardening (Phase 6)
+
+- `helmet` enabled for common HTTP security headers
+- Auth route rate limiting (`30 requests / 15 minutes / IP`)
+- Client-side `ErrorBoundary` for runtime UI errors
+- `404` route fallback page (`*`)
+- Skeleton loading states for Dashboard and ProjectDetail
+
 ## Environment Variables
 
 ### Server (`server/.env`)
@@ -112,6 +149,12 @@ Expected response:
 | `MONGODB_URI` | MongoDB connection string      |
 | `JWT_SECRET`  | Secret for signing JWT tokens  |
 | `CLIENT_URL`  | Frontend URL for CORS          |
+| `SMTP_HOST`   | SMTP host for reset emails     |
+| `SMTP_PORT`   | SMTP port (e.g. 587 or 465)    |
+| `SMTP_SECURE` | `true` if using port 465       |
+| `SMTP_USER`   | SMTP username / email          |
+| `SMTP_PASS`   | SMTP password / API key        |
+| `EMAIL_FROM`  | Optional “from” address        |
 
 ### Client (`client/.env`)
 
@@ -122,6 +165,20 @@ Expected response:
 ## Development Workflow
 
 This project uses a feature-branch workflow. Each phase is developed on its own branch and merged into `main`.
+
+## Deployment Notes
+
+### Backend (Render / Railway / Fly.io)
+
+- Set environment variables: `PORT`, `MONGODB_URI`, `JWT_SECRET`, `CLIENT_URL`
+- Start command: `npm start` in `server/`
+- Ensure frontend URL is listed in `CLIENT_URL` for CORS
+
+### Frontend (Vercel / Netlify)
+
+- Set `VITE_API_URL` to your deployed backend API URL (for example `https://api.example.com/api`)
+- Build command: `npm run build`
+- Output directory: `dist`
 
 ## License
 

@@ -1,40 +1,61 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Lock, LogIn, Mail } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useMemo, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Eye, EyeOff, Lock, RotateCcw } from 'lucide-react';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import FormError from '../components/FormError';
 import Spinner from '../components/Spinner';
+import { resetPassword } from '../api/auth';
 
-function Login() {
-  const { login } = useAuth();
+function ResetPassword() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [searchParams] = useSearchParams();
+  const token = useMemo(() => searchParams.get('token') || '', [searchParams]);
+
+  const [form, setForm] = useState({ password: '', confirmPassword: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     setError('');
+    setStatus('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setStatus('');
 
-    if (!form.email || !form.password) {
+    if (!token) {
+      setError('Reset token is missing. Please use the link from your email.');
+      return;
+    }
+
+    if (!form.password || !form.confirmPassword) {
       setError('Please fill in all fields');
+      return;
+    }
+
+    if (form.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    if (form.password !== form.confirmPassword) {
+      setError('Passwords do not match');
       return;
     }
 
     setLoading(true);
     try {
-      await login(form);
-      navigate('/dashboard');
+      const res = await resetPassword({ token, password: form.password });
+      setStatus(res.data?.message || 'Password reset successful. Please sign in.');
+      setTimeout(() => navigate('/login'), 1200);
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+      setError(err.response?.data?.message || 'Password reset failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -45,11 +66,11 @@ function Login() {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 inline-flex rounded-xl bg-brand-50 p-3 text-brand-600">
-            <LogIn size={28} aria-hidden="true" />
+            <RotateCcw size={28} aria-hidden="true" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Welcome back</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Reset password</h1>
           <p className="mt-2 text-sm text-slate-600">
-            Sign in to your DOIT account
+            Choose a new password for your account.
           </p>
         </div>
 
@@ -60,32 +81,26 @@ function Login() {
         >
           {error && <FormError message={error} />}
 
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            label="Email"
-            placeholder="you@example.com"
-            autoComplete="email"
-            icon={Mail}
-            value={form.email}
-            onChange={handleChange}
-          />
+          {status ? (
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+              {status}
+            </div>
+          ) : null}
 
           <Input
             id="password"
             name="password"
             type={showPassword ? 'text' : 'password'}
-            label="Password"
-            placeholder="Your password"
-            autoComplete="current-password"
+            label="New password"
+            placeholder="At least 6 characters"
+            autoComplete="new-password"
             icon={Lock}
             value={form.password}
             onChange={handleChange}
             suffix={
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
+                onClick={() => setShowPassword((s) => !s)}
                 className="text-slate-400 hover:text-slate-600"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
@@ -98,31 +113,34 @@ function Login() {
             }
           />
 
-          <div className="-mt-2 flex items-center justify-end">
-            <Link
-              to="/forgot-password"
-              className="text-sm font-medium text-brand-600 hover:text-brand-700"
-            >
-              Forgot password?
-            </Link>
-          </div>
+          <Input
+            id="confirmPassword"
+            name="confirmPassword"
+            type={showPassword ? 'text' : 'password'}
+            label="Confirm new password"
+            placeholder="Re-enter password"
+            autoComplete="new-password"
+            icon={Lock}
+            value={form.confirmPassword}
+            onChange={handleChange}
+          />
 
           <Button type="submit" className="w-full" loading={loading} disabled={loading}>
             {loading ? (
               <>
                 <Spinner size={18} />
-                Signing in...
+                Resetting...
               </>
             ) : (
-              'Sign in'
+              'Reset password'
             )}
           </Button>
         </form>
 
         <p className="mt-6 text-center text-sm text-slate-600">
-          Don&apos;t have an account?{' '}
-          <Link to="/register" className="font-medium text-brand-600 hover:text-brand-700">
-            Create one
+          Back to{' '}
+          <Link to="/login" className="font-medium text-brand-600 hover:text-brand-700">
+            Sign in
           </Link>
         </p>
       </div>
@@ -130,4 +148,5 @@ function Login() {
   );
 }
 
-export default Login;
+export default ResetPassword;
+

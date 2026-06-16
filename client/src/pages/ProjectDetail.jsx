@@ -162,8 +162,18 @@ function ProjectDetail() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <Spinner size={32} className="text-brand-600" />
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+        <div className="mb-4 h-8 w-56 animate-pulse rounded bg-slate-200" aria-hidden="true" />
+        <div className="mb-8 h-5 w-72 animate-pulse rounded bg-slate-100" aria-hidden="true" />
+        <div className="space-y-3" aria-label="Loading tasks">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={`task-skeleton-${i}`}
+              className="h-24 animate-pulse rounded-xl border border-slate-200 bg-slate-100"
+              aria-hidden="true"
+            />
+          ))}
+        </div>
         <span className="sr-only">Loading project...</span>
       </div>
     );
