@@ -24,6 +24,13 @@ function Dashboard() {
 
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const quotes = [
+    'Small progress each day adds up to big results.',
+    'Focus on being productive, not busy.',
+    'Done is better than perfect.',
+    'Clarity comes from engagement, not thought.',
+  ];
+  const [quoteIndex, setQuoteIndex] = useState(0);
 
   const fetchProjects = useCallback(async () => {
     setLoading(true);
@@ -41,6 +48,13 @@ function Dashboard() {
   useEffect(() => {
     fetchProjects();
   }, [fetchProjects]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setQuoteIndex((prev) => (prev + 1) % quotes.length);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, [quotes.length]);
 
   const openCreateModal = () => {
     setEditingProject(null);
@@ -118,7 +132,9 @@ function Dashboard() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+    <div className="relative mx-auto max-w-6xl overflow-hidden px-4 py-8 sm:px-6 sm:py-12">
+      <span className="bg-float-orb left-[-3rem] top-10 h-32 w-32 bg-brand-300" />
+      <span className="bg-float-orb bg-float-orb-reverse right-[-4rem] top-24 h-36 w-36 bg-emerald-300" />
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="mb-2 inline-flex rounded-lg bg-brand-50 p-2 text-brand-600">
@@ -138,6 +154,10 @@ function Dashboard() {
           <Plus size={18} aria-hidden="true" />
           New project
         </Button>
+      </div>
+
+      <div className="quote-fade mb-6 rounded-xl border border-brand-100 bg-gradient-to-r from-brand-50 to-white px-4 py-3 text-sm text-slate-700">
+        "{quotes[quoteIndex]}"
       </div>
 
       {error && (

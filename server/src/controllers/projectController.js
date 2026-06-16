@@ -1,5 +1,6 @@
 import { validationResult } from 'express-validator';
 import Project from '../models/Project.js';
+import Task from '../models/Task.js';
 import asyncHandler from '../utils/asyncHandler.js';
 
 const formatProject = (project) => ({
@@ -25,18 +26,11 @@ export const getProjects = asyncHandler(async (req, res) => {
         as: 'tasks',
       },
     },
-    {
-      $addFields: {
-        taskCount: { $size: '$tasks' },
-      },
-    },
+    { $addFields: { taskCount: { $size: '$tasks' } } },
     { $project: { tasks: 0 } },
   ]);
 
-  res.status(200).json({
-    success: true,
-    data: { projects: projects.map(formatProject) },
-  });
+  res.status(200).json({ success: true, data: { projects: projects.map(formatProject) } });
 });
 
 export const createProject = asyncHandler(async (req, res) => {
@@ -47,13 +41,7 @@ export const createProject = asyncHandler(async (req, res) => {
   }
 
   const { title, description, color } = req.body;
-
-  const project = await Project.create({
-    title,
-    description,
-    color,
-    owner: req.user._id,
-  });
+  const project = await Project.create({ title, description, color, owner: req.user._id });
 
   res.status(201).json({
     success: true,
@@ -62,19 +50,16 @@ export const createProject = asyncHandler(async (req, res) => {
 });
 
 export const getProject = asyncHandler(async (req, res) => {
-  const project = await Project.findOne({
-    _id: req.params.id,
-    owner: req.user._id,
-  });
-
+  const project = await Project.findOne({ _id: req.params.id, owner: req.user._id });
   if (!project) {
     res.status(404);
     throw new Error('Project not found');
   }
 
+  const taskCount = await Task.countDocuments({ project: project._id });
   res.status(200).json({
     success: true,
-    data: { project: formatProject({ ...project.toObject(), taskCount: 0 }) },
+    data: { project: formatProject({ ...project.toObject(), taskCount }) },
   });
 });
 
@@ -85,41 +70,33 @@ export const updateProject = asyncHandler(async (req, res) => {
     throw new Error(errors.array()[0].msg);
   }
 
-  const project = await Project.findOne({
-    _id: req.params.id,
-    owner: req.user._id,
-  });
-
+  const project = await Project.findOne({ _id: req.params.id, owner: req.user._id });
   if (!project) {
     res.status(404);
     throw new Error('Project not found');
   }
 
   const { title, description, color } = req.body;
-
   if (title !== undefined) project.title = title;
   if (description !== undefined) project.description = description;
   if (color !== undefined) project.color = color;
-
   await project.save();
 
+  const taskCount = await Task.countDocuments({ project: project._id });
   res.status(200).json({
     success: true,
-    data: { project: formatProject({ ...project.toObject(), taskCount: 0 }) },
+    data: { project: formatProject({ ...project.toObject(), taskCount }) },
   });
 });
 
 export const deleteProject = asyncHandler(async (req, res) => {
-  const project = await Project.findOne({
-    _id: req.params.id,
-    owner: req.user._id,
-  });
-
+  const project = await Project.findOne({ _id: req.params.id, owner: req.user._id });
   if (!project) {
     res.status(404);
     throw new Error('Project not found');
   }
 
+  await Task.deleteMany({ project: project._id });
   await project.deleteOne();
 
   res.status(200).json({

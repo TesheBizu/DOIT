@@ -39,7 +39,10 @@ function Home() {
   }, []);
 
   return (
-    <div>
+    <div className="relative overflow-hidden">
+      <span className="bg-float-orb left-[-6rem] top-24 h-44 w-44 bg-brand-300" />
+      <span className="bg-float-orb bg-float-orb-reverse right-[-5rem] top-40 h-40 w-40 bg-cyan-300" />
+      <span className="bg-float-orb left-1/3 top-[28rem] h-36 w-36 bg-violet-300" />
       <section className="relative overflow-hidden bg-gradient-to-b from-brand-50 to-slate-50 px-4 py-16 sm:px-6 sm:py-24">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-2xl text-center">

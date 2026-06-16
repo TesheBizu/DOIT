@@ -92,6 +92,16 @@ Expected response:
 | PUT | `/api/projects/:id` | Yes | Update a project |
 | DELETE | `/api/projects/:id` | Yes | Delete a project |
 
+## Tasks API (Phase 4)
+
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| GET | `/api/projects/:projectId/tasks` | Yes | List tasks for a project |
+| POST | `/api/projects/:projectId/tasks` | Yes | Create task in a project |
+| PUT | `/api/tasks/:id` | Yes | Update task details |
+| PATCH | `/api/tasks/:id/status` | Yes | Quick status update |
+| DELETE | `/api/tasks/:id` | Yes | Delete task |
+
 ## Environment Variables
 
 ### Server (`server/.env`)
