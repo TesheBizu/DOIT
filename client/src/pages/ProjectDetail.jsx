@@ -36,6 +36,7 @@ function ProjectDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('created_desc');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -64,9 +65,36 @@ function ProjectDetail() {
   }, [fetchData]);
 
   const filteredTasks = useMemo(() => {
-    if (statusFilter === 'all') return tasks;
-    return tasks.filter((task) => task.status === statusFilter);
-  }, [tasks, statusFilter]);
+    const base =
+      statusFilter === 'all'
+        ? [...tasks]
+        : tasks.filter((task) => task.status === statusFilter);
+
+    return base.sort((a, b) => {
+      if (sortBy === 'priority') {
+        const rank = { high: 0, medium: 1, low: 2 };
+        return (rank[a.priority] ?? 3) - (rank[b.priority] ?? 3);
+      }
+
+      if (sortBy === 'due_asc') {
+        const aTime = a.dueDate ? dayjs(a.dueDate).valueOf() : Number.MAX_SAFE_INTEGER;
+        const bTime = b.dueDate ? dayjs(b.dueDate).valueOf() : Number.MAX_SAFE_INTEGER;
+        return aTime - bTime;
+      }
+
+      if (sortBy === 'due_desc') {
+        const aTime = a.dueDate ? dayjs(a.dueDate).valueOf() : 0;
+        const bTime = b.dueDate ? dayjs(b.dueDate).valueOf() : 0;
+        return bTime - aTime;
+      }
+
+      if (sortBy === 'created_asc') {
+        return dayjs(a.createdAt).valueOf() - dayjs(b.createdAt).valueOf();
+      }
+
+      return dayjs(b.createdAt).valueOf() - dayjs(a.createdAt).valueOf();
+    });
+  }, [tasks, statusFilter, sortBy]);
 
   const resetForm = () => {
     setForm(initialForm);
@@ -199,6 +227,23 @@ function ProjectDetail() {
             {value === 'in_progress' ? 'in progress' : value}
           </button>
         ))}
+      </div>
+      <div className="mb-6">
+        <label htmlFor="task-sort" className="mb-1 block text-sm font-medium text-slate-700">
+          Sort tasks
+        </label>
+        <select
+          id="task-sort"
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="w-full max-w-xs rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
+        >
+          <option value="created_desc">Newest first</option>
+          <option value="created_asc">Oldest first</option>
+          <option value="due_asc">Due date (earliest)</option>
+          <option value="due_desc">Due date (latest)</option>
+          <option value="priority">Priority (high to low)</option>
+        </select>
       </div>
 
       {filteredTasks.length === 0 ? (

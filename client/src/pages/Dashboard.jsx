@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { FolderKanban, Plus } from 'lucide-react';
+import { FolderKanban, Plus, Search, BarChart3, Clock3, CheckCircle2 } from 'lucide-react';
+import dayjs from 'dayjs';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import * as projectsApi from '../api/projects';
+import * as dashboardApi from '../api/dashboard';
 import { defaultProjectForm } from '../utils/projects';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
@@ -24,6 +27,10 @@ function Dashboard() {
 
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [stats, setStats] = useState(null);
+  const [searchText, setSearchText] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
   const quotes = [
     'Small progress each day adds up to big results.',
     'Focus on being productive, not busy.',
@@ -45,9 +52,19 @@ function Dashboard() {
     }
   }, []);
 
+  const fetchDashboardStats = useCallback(async () => {
+    try {
+      const { data } = await dashboardApi.getDashboard();
+      setStats(data.data);
+    } catch {
+      setStats(null);
+    }
+  }, []);
+
   useEffect(() => {
     fetchProjects();
-  }, [fetchProjects]);
+    fetchDashboardStats();
+  }, [fetchProjects, fetchDashboardStats]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -55,6 +72,28 @@ function Dashboard() {
     }, 4500);
     return () => clearInterval(timer);
   }, [quotes.length]);
+
+  useEffect(() => {
+    const q = searchText.trim();
+    if (!q) {
+      setSearchResults([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setSearchLoading(true);
+      try {
+        const { data } = await dashboardApi.searchTasks(q);
+        setSearchResults(data.data.tasks);
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [searchText]);
 
   const openCreateModal = () => {
     setEditingProject(null);
@@ -158,6 +197,93 @@ function Dashboard() {
 
       <div className="quote-fade mb-6 rounded-xl border border-brand-100 bg-gradient-to-r from-brand-50 to-white px-4 py-3 text-sm text-slate-700">
         "{quotes[quoteIndex]}"
+      </div>
+
+      {stats && (
+        <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <div className="mb-2 inline-flex rounded-lg bg-blue-50 p-2 text-blue-600">
+              <FolderKanban size={18} aria-hidden="true" />
+            </div>
+            <p className="text-xs text-slate-500">Projects</p>
+            <p className="text-xl font-semibold text-slate-900">{stats.totals.projects}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <div className="mb-2 inline-flex rounded-lg bg-indigo-50 p-2 text-indigo-600">
+              <BarChart3 size={18} aria-hidden="true" />
+            </div>
+            <p className="text-xs text-slate-500">Open Tasks</p>
+            <p className="text-xl font-semibold text-slate-900">
+              {stats.byStatus.todo + stats.byStatus.in_progress}
+            </p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <div className="mb-2 inline-flex rounded-lg bg-amber-50 p-2 text-amber-600">
+              <Clock3 size={18} aria-hidden="true" />
+            </div>
+            <p className="text-xs text-slate-500">Overdue</p>
+            <p className="text-xl font-semibold text-slate-900">{stats.overdue}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <div className="mb-2 inline-flex rounded-lg bg-emerald-50 p-2 text-emerald-600">
+              <CheckCircle2 size={18} aria-hidden="true" />
+            </div>
+            <p className="text-xs text-slate-500">Done</p>
+            <p className="text-xl font-semibold text-slate-900">{stats.byStatus.done}</p>
+          </div>
+        </div>
+      )}
+
+      <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4">
+        <label htmlFor="task-search" className="mb-2 block text-sm font-medium text-slate-700">
+          Search tasks across projects
+        </label>
+        <div className="relative">
+          <Search
+            size={16}
+            aria-hidden="true"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+          />
+          <input
+            id="task-search"
+            type="text"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            placeholder="Search by task title or description..."
+            className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900"
+          />
+        </div>
+        {searchText.trim() && (
+          <div className="mt-3">
+            {searchLoading ? (
+              <p className="text-sm text-slate-500">Searching...</p>
+            ) : searchResults.length === 0 ? (
+              <p className="text-sm text-slate-500">No matching tasks found.</p>
+            ) : (
+              <ul className="space-y-2">
+                {searchResults.map((task) => (
+                  <li key={task.id} className="rounded-lg border border-slate-200 px-3 py-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-slate-900">{task.title}</p>
+                        <p className="text-xs text-slate-500">
+                          {task.project?.title || 'Project'} · {task.status.replace('_', ' ')}
+                          {task.dueDate ? ` · due ${dayjs(task.dueDate).format('MMM D')}` : ''}
+                        </p>
+                      </div>
+                      <Link
+                        to={`/projects/${task.project?.id}`}
+                        className="text-xs font-medium text-brand-600 hover:text-brand-700"
+                      >
+                        Open
+                      </Link>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
       </div>
 
       {error && (
