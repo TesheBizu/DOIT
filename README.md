@@ -158,25 +158,3 @@ Expected response:
 | Variable       | Description              |
 |----------------|--------------------------|
 | `VITE_API_URL` | Backend API base URL     |
-
-## Development Workflow
-
-This project uses a feature-branch workflow. Each phase is developed on its own branch and merged into `main`.
-
-## Deployment Notes
-
-### Backend (Render / Railway / Fly.io)
-
-- Set environment variables: `MONGODB_URI`, `JWT_SECRET`, `CLIENT_URL`, `SENDGRID_API_KEY`, `EMAIL_FROM`
-- Start command: `npm start` in `server/`
-- Ensure frontend URL is listed in `CLIENT_URL` for CORS
-
-### Frontend (Vercel / Netlify)
-
-- Set `VITE_API_URL` to your deployed backend API URL (for example `https://api.example.com/api`)
-- Build command: `npm run build`
-- Output directory: `dist`
-
-## License
-
-ISC
