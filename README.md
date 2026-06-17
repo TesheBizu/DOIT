@@ -60,17 +60,18 @@ Client runs at `http://localhost:5173`
 
 DOIT supports password reset via email.
 
-### Configure SMTP (server)
+### Configure SendGrid (server)
 
-In `server/.env`, set:
+Password reset emails use [SendGrid](https://sendgrid.com) (HTTP API — works on Render free tier).
 
-- `SMTP_HOST`
-- `SMTP_PORT`
-- `SMTP_SECURE` (`true` for port 465, otherwise `false`)
-- `SMTP_USER`
-- `SMTP_PASS`
-- `EMAIL_FROM` (optional; defaults to `SMTP_USER`)
-- `CLIENT_URL` (used to generate the reset link)
+1. Create a free SendGrid account (100 emails/day).
+2. **Settings → API Keys** → create a key with **Mail Send** permission.
+3. **Settings → Sender Authentication** → verify a single sender email.
+4. In `server/.env`, set:
+
+- `SENDGRID_API_KEY` — your SendGrid API key
+- `EMAIL_FROM` — verified sender, e.g. `DOIT <you@example.com>`
+- `CLIENT_URL` — used to generate the reset link
 
 ### Flow
 
@@ -147,14 +148,10 @@ Expected response:
 |---------------|--------------------------------|
 | `PORT`        | API port (default: 5000)       |
 | `MONGODB_URI` | MongoDB connection string      |
-| `JWT_SECRET`  | Secret for signing JWT tokens  |
-| `CLIENT_URL`  | Frontend URL for CORS          |
-| `SMTP_HOST`   | SMTP host for reset emails     |
-| `SMTP_PORT`   | SMTP port (e.g. 587 or 465)    |
-| `SMTP_SECURE` | `true` if using port 465       |
-| `SMTP_USER`   | SMTP username / email          |
-| `SMTP_PASS`   | SMTP password / API key        |
-| `EMAIL_FROM`  | Optional “from” address        |
+| `JWT_SECRET`       | Secret for signing JWT tokens         |
+| `CLIENT_URL`       | Frontend URL for CORS and reset links |
+| `SENDGRID_API_KEY` | SendGrid API key for password reset   |
+| `EMAIL_FROM`       | Verified SendGrid sender address      |
 
 ### Client (`client/.env`)
 
@@ -170,7 +167,7 @@ This project uses a feature-branch workflow. Each phase is developed on its own 
 
 ### Backend (Render / Railway / Fly.io)
 
-- Set environment variables: `PORT`, `MONGODB_URI`, `JWT_SECRET`, `CLIENT_URL`
+- Set environment variables: `MONGODB_URI`, `JWT_SECRET`, `CLIENT_URL`, `SENDGRID_API_KEY`, `EMAIL_FROM`
 - Start command: `npm start` in `server/`
 - Ensure frontend URL is listed in `CLIENT_URL` for CORS
 
